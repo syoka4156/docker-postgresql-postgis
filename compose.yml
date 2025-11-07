@@ -1,0 +1,29 @@
+services:
+  postgres:
+    build: .
+    container_name: pg-postgis
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: "Etc/UTC"
+    ports:
+      - "127.0.0.1:${PG_PORT}:5432"
+    volumes:
+      - ./_data/postgres:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    command: >
+      postgres
+      -c shared_buffers=2GB
+      -c work_mem=128MB
+      -c maintenance_work_mem=1GB
+      -c effective_cache_size=6GB
+      -c max_parallel_workers=8
+      -c max_parallel_workers_per_gather=4
+      -c wal_compression=on
+      -c autovacuum_naptime=30s
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
